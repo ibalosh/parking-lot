@@ -26,7 +26,7 @@ class Ticket < ApplicationRecord
   # Returns 0 if ticket is already paid
   def price_to_pay(at_time:)
     return 0 if issued_at.nil?
-    return 0 if paid?
+    return 0 if is_paid(at_time: at_time)
 
     duration_in_seconds = at_time - issued_at
     hours_parked = (duration_in_seconds / 3600.0).ceil # Every started hour
@@ -43,17 +43,17 @@ class Ticket < ApplicationRecord
     payments.order(paid_at: :desc).first
   end
 
-  # Check if ticket is currently paid
-  def paid?
+  # Check if ticket is paid at a given time
+  def is_paid(at_time:)
     payment = latest_payment
     return false unless payment&.paid_at.present?
 
-    time_since_payment = Time.current - payment.paid_at
+    time_since_payment = at_time - payment.paid_at
     time_since_payment <= 15.minutes
   end
 
-  def is_paid_formatted
-    paid? ? "paid" : "unpaid"
+  def is_paid_formatted(at_time:)
+    is_paid(at_time:) ? "paid" : "unpaid"
   end
 
   private

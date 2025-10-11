@@ -14,7 +14,7 @@ module Api
         # Lock the ticket row to prevent concurrent payment creation
         ticket.lock!
 
-        if ticket.paid?
+        if ticket.is_paid(at_time: Time.current)
           existing_payment = ticket.latest_payment
           render json: {
             ticket_barcode: ticket.barcode,

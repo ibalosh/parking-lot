@@ -50,7 +50,7 @@ module Api
 
       render json: {
         barcode: @ticket.barcode,
-        state: @ticket.is_paid_formatted
+        state: @ticket.is_paid_formatted(at_time: Time.current)
       }, status: :ok
     end
 

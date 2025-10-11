@@ -163,6 +163,26 @@ RSpec.describe "Api::Tickets", type: :request do
         expect(json['payment_method']).to eq('cash')
       end
 
+      it 'returns existing payment when ticket is already paid (idempotent)' do
+        # Create initial payment
+        ticket.update_column(:issued_at, 2.hours.ago)
+        post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'credit_card' } }
+
+        expect(response).to have_http_status(:created)
+        first_payment = JSON.parse(response.body)
+
+        # Try to pay again - should return existing payment without creating a new one
+        expect {
+          post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'cash' } }
+        }.not_to change(Payment, :count)
+
+        expect(response).to have_http_status(:ok)
+        json = JSON.parse(response.body)
+        expect(json['amount']).to eq(first_payment['amount'])
+        expect(json['payment_method']).to eq('credit_card') # Original payment method
+        expect(json['paid_at']).to eq(first_payment['paid_at'])
+      end
+
       it 'returns error for invalid payment method' do
         post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'bitcoin' } }
 

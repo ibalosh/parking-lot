@@ -9,11 +9,23 @@ module Api
         return
       end
 
-      amount = ticket.price_to_pay_at_this_moment
+      # Use pessimistic locking to prevent race conditions on concurrent payment attempts
+      Ticket.transaction do
+        # Lock the ticket row to prevent concurrent payment creation
+        ticket.lock!
 
-      if amount === 0
-        render json: { errors: "Ticket is already paid" }, status: :unprocessable_content
-      else
+        if ticket.paid?
+          existing_payment = ticket.latest_payment
+          render json: {
+            ticket_barcode: ticket.barcode,
+            amount: existing_payment.amount,
+            payment_method: existing_payment.payment_method,
+            paid_at: existing_payment.paid_at
+          }, status: :ok
+          return
+        end
+
+        amount = ticket.price_to_pay_at_this_moment
         payment = ticket.payments.build(
           amount: amount,
           payment_method: payment_params[:payment_method],

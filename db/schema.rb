@@ -32,7 +32,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_153731) do
     t.integer "ticket_id", null: false
     t.decimal "amount", precision: 10, scale: 2, null: false
     t.string "payment_method", null: false
-    t.datetime "paid_at"
+    t.datetime "paid_at", null: false
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.index ["ticket_id"], name: "index_payments_on_ticket_id"

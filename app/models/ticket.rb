@@ -45,7 +45,15 @@ class Ticket < ApplicationRecord
 
   # Check if ticket is currently paid
   def paid?
-    latest_payment.present?
+    payment = latest_payment
+    return false unless payment&.paid_at.present?
+
+    time_since_payment = Time.current - payment.paid_at
+    time_since_payment <= 15.minutes
+  end
+
+  def is_paid_formatted
+    paid? ? "paid" : "unpaid"
   end
 
   private

@@ -1,6 +1,7 @@
 module Api
   class TicketsController < ApplicationController
     before_action :find_facility
+    before_action :find_ticket, only: [ :show, :state ]
 
     def create
       if @facility.nil?
@@ -29,22 +30,36 @@ module Api
     end
 
     def show
-      barcode = params[:id]
-      ticket = Ticket.find_by(barcode: barcode)
-
-      if ticket.nil?
+      if @ticket.nil?
         render json: { error: "Ticket not found" }, status: :not_found
         return
       end
 
       render json: {
-        barcode: ticket.barcode,
-        issued_at: ticket.issued_at,
-        price: ticket.price_to_pay_formatted(at_time: Time.current)
+        barcode: @ticket.barcode,
+        issued_at: @ticket.issued_at,
+        price: @ticket.price_to_pay_formatted(at_time: Time.current)
+      }, status: :ok
+    end
+
+    def state
+      if @ticket.nil?
+        render json: { error: "Ticket not found" }, status: :not_found
+        return
+      end
+
+      render json: {
+        barcode: @ticket.barcode,
+        state: @ticket.is_paid_formatted
       }, status: :ok
     end
 
     private
+
+    def find_ticket
+      barcode = params[:id]
+      @ticket = Ticket.find_by(barcode: barcode)
+    end
 
     def find_facility
       # To keep things simple, we will always use the same first parking lot.

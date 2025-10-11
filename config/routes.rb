@@ -4,6 +4,9 @@ Rails.application.routes.draw do
   namespace :api, defaults: { format: :json } do
     resources :tickets, only: [ :create, :index, :show ] do
       resource :payments, only: [ :create ]
+      member do
+        get :state
+      end
     end
   end
 

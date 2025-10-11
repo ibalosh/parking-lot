@@ -26,7 +26,7 @@ RSpec.describe "Api::Tickets", type: :request do
         post '/api/tickets'
         barcode3 = JSON.parse(response.body)['barcode']
 
-        expect([barcode1, barcode2, barcode3].uniq.length).to eq(3)
+        expect([ barcode1, barcode2, barcode3 ].uniq.length).to eq(3)
       end
 
       it 'returns JSON format by default' do

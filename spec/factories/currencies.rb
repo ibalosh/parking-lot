@@ -1,7 +1,7 @@
 FactoryBot.define do
   factory :currency do
-    code { "MyString" }
-    name { "MyString" }
-    symbol { "MyString" }
+    code { "EUR" }
+    name { "Euro" }
+    symbol { "€" }
   end
 end

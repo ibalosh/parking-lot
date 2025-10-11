@@ -17,17 +17,17 @@ class Ticket < ApplicationRecord
 
   # Calculate the total price to pay based on parking duration
   # Every started hour costs the price_per_hour from price_at_entry
-  def price_to_pay
+  def price_to_pay(at_time:)
     return 0 if issued_at.nil?
 
-    duration_in_seconds = Time.current - issued_at
+    duration_in_seconds = at_time - issued_at
     hours_parked = (duration_in_seconds / 3600.0).ceil # Every started hour
 
     hours_parked * price_at_entry.price_per_hour
   end
 
-  def price_to_pay_formatted
-    "#{price_to_pay} #{price_at_entry.currency.symbol}"
+  def price_to_pay_formatted(at_time:)
+    "#{price_to_pay(at_time: at_time)} #{price_at_entry.currency.symbol}"
   end
 
   private

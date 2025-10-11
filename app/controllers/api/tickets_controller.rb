@@ -40,7 +40,7 @@ module Api
       render json: {
         barcode: ticket.barcode,
         issued_at: ticket.issued_at,
-        price: ticket.price_to_pay_formatted
+        price: ticket.price_to_pay_formatted(at_time: Time.current)
       }, status: :ok
     end
 

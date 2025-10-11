@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_11_134442) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_11_153731) do
   create_table "currencies", force: :cascade do |t|
     t.string "code", null: false
     t.string "name", null: false
@@ -26,6 +26,16 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_134442) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.check_constraint "spaces_count >= 0", name: "spaces_count_positive"
+  end
+
+  create_table "payments", force: :cascade do |t|
+    t.integer "ticket_id", null: false
+    t.decimal "amount", precision: 10, scale: 2, null: false
+    t.string "payment_method", null: false
+    t.datetime "paid_at"
+    t.datetime "created_at", null: false
+    t.datetime "updated_at", null: false
+    t.index ["ticket_id"], name: "index_payments_on_ticket_id"
   end
 
   create_table "prices", force: :cascade do |t|
@@ -57,6 +67,7 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_134442) do
     t.datetime "updated_at", null: false
   end
 
+  add_foreign_key "payments", "tickets"
   add_foreign_key "prices", "currencies"
   add_foreign_key "prices", "parking_lot_facilities"
   add_foreign_key "tickets", "parking_lot_facilities"

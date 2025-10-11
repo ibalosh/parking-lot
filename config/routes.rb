@@ -2,7 +2,9 @@ Rails.application.routes.draw do
   # Define your application routes per the DSL in https://guides.rubyonrails.org/routing.html
 
   namespace :api, defaults: { format: :json } do
-    resources :tickets, only: [ :create, :index, :show ]
+    resources :tickets, only: [ :create, :index, :show ] do
+      resource :payments, only: [ :create ]
+    end
   end
 
   # Reveal health status on /up that returns 200 if the app boots with no exceptions, otherwise 500.

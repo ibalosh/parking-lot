@@ -3,6 +3,7 @@ class Ticket < ApplicationRecord
 
   belongs_to :parking_lot_facility
   belongs_to :price_at_entry, class_name: "Price", foreign_key: "price_id"
+  has_many :payments
 
   before_validation :generate_barcode, on: :create
   before_validation :set_issued_at, on: :create
@@ -12,13 +13,20 @@ class Ticket < ApplicationRecord
             uniqueness: true,
             length: { is: 16 },
             format: { with: /\A[0-9A-Fa-f]{16}\z/, message: "must be a 16-character hex string" }
+  validates :issued_at, presence: true
 
   MAX_BARCODE_GENERATION_ATTEMPTS = 5
 
+  def price_to_pay_at_this_moment
+    price_to_pay(at_time: Time.current)
+  end
+
   # Calculate the total price to pay based on parking duration
   # Every started hour costs the price_per_hour from price_at_entry
+  # Returns 0 if ticket is already paid
   def price_to_pay(at_time:)
     return 0 if issued_at.nil?
+    return 0 if paid?
 
     duration_in_seconds = at_time - issued_at
     hours_parked = (duration_in_seconds / 3600.0).ceil # Every started hour
@@ -28,6 +36,16 @@ class Ticket < ApplicationRecord
 
   def price_to_pay_formatted(at_time:)
     "#{price_to_pay(at_time: at_time)} #{price_at_entry.currency.symbol}"
+  end
+
+  # Get the most recent payment
+  def latest_payment
+    payments.order(paid_at: :desc).first
+  end
+
+  # Check if ticket is currently paid
+  def paid?
+    latest_payment.present?
   end
 
   private

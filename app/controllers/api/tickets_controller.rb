@@ -22,7 +22,7 @@ module Api
           issued_at: ticket.issued_at
         }, status: :created
       else
-        render json: { errors: ticket.errors.full_messages }, status: :unprocessable_entity
+        render json: { errors: ticket.errors.full_messages }, status: :unprocessable_content
       end
     rescue Ticket::BarcodeGenerationError => e
       render json: { error: e.message }, status: :internal_server_error

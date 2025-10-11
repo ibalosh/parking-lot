@@ -26,7 +26,7 @@ RSpec.describe "Api::Tickets", type: :request do
         post '/api/tickets'
         barcode3 = JSON.parse(response.body)['barcode']
 
-        expect([ barcode1, barcode2, barcode3 ].uniq.length).to eq(3)
+        expect([barcode1, barcode2, barcode3].uniq.length).to eq(3)
       end
 
       it 'returns JSON format by default' do
@@ -85,7 +85,6 @@ RSpec.describe "Api::Tickets", type: :request do
       end
 
       it 'calculates price for less than 1 hour as 1 hour' do
-        # Ticket issued 30 minutes ago (should cost 1 * €2 = €2)
         ticket.update_column(:issued_at, 30.minutes.ago)
 
         get "/api/tickets/#{ticket.barcode}"
@@ -103,6 +102,16 @@ RSpec.describe "Api::Tickets", type: :request do
         expect(json['price']).to eq("4.0 €")
       end
 
+      it 'returns price 0 when ticket is paid' do
+        ticket.update_column(:issued_at, 2.hours.ago)
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: Time.current)
+
+        get "/api/tickets/#{ticket.barcode}"
+
+        json = JSON.parse(response.body)
+        expect(json['price']).to eq("0 €")
+      end
+
       it 'returns JSON format' do
         get "/api/tickets/#{ticket.barcode}"
         expect(response.content_type).to match(%r{application/json})
@@ -112,6 +121,66 @@ RSpec.describe "Api::Tickets", type: :request do
     context 'when ticket does not exist' do
       it 'returns not found error' do
         get "/api/tickets/invalidbarcode123"
+
+        expect(response).to have_http_status(:not_found)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Ticket not found')
+      end
+    end
+  end
+
+  describe "POST /api/tickets/:barcode/payments" do
+    let!(:currency) { create(:currency, code: "EUR", symbol: "€") }
+    let!(:facility) { create(:parking_lot_facility) }
+    let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+
+    context 'when ticket exists' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+      it 'creates a payment with the current amount due' do
+        ticket.update_column(:issued_at, 2.5.hours.ago)
+
+        expect {
+          post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'credit_card' } }
+        }.to change(Payment, :count).by(1)
+
+        expect(response).to have_http_status(:created)
+
+        json = JSON.parse(response.body)
+        expect(json['ticket_barcode']).to eq(ticket.barcode)
+        expect(json['amount']).to eq("6.0") # 3 hours * €2
+        expect(json['payment_method']).to eq('credit_card')
+        expect(json['paid_at']).to be_present
+      end
+
+      it 'accepts different payment methods' do
+        post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'cash' } }
+
+        expect(response).to have_http_status(:created)
+
+        json = JSON.parse(response.body)
+        expect(json['payment_method']).to eq('cash')
+      end
+
+      it 'returns error for invalid payment method' do
+        post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'bitcoin' } }
+
+        expect(response).to have_http_status(:unprocessable_content)
+
+        json = JSON.parse(response.body)
+        expect(json['errors']).to include(/Payment method is not included in the list/)
+      end
+
+      it 'returns JSON format' do
+        post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'credit_card' } }
+        expect(response.content_type).to match(%r{application/json})
+      end
+    end
+
+    context 'when ticket does not exist' do
+      it 'returns not found error' do
+        post "/api/tickets/invalidbarcode123/payments", params: { payment: { payment_method: 'credit_card' } }
 
         expect(response).to have_http_status(:not_found)
 

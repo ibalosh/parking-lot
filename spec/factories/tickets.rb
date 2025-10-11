@@ -1,6 +1,5 @@
 FactoryBot.define do
   factory :ticket do
-    barcode { "MyString" }
-    parking_lot_facility { nil }
+    association :parking_lot_facility
   end
 end

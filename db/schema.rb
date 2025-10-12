@@ -60,13 +60,6 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_153731) do
     t.index ["price_id"], name: "index_tickets_on_price_id"
   end
 
-  create_table "users", force: :cascade do |t|
-    t.string "name"
-    t.string "email"
-    t.datetime "created_at", null: false
-    t.datetime "updated_at", null: false
-  end
-
   add_foreign_key "payments", "tickets"
   add_foreign_key "prices", "currencies"
   add_foreign_key "prices", "parking_lot_facilities"

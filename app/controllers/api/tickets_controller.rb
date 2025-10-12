@@ -27,11 +27,6 @@ module Api
     end
 
     def show
-      if @ticket.nil?
-        render json: { error: "Ticket not found." }, status: :not_found
-        return
-      end
-
       render json: {
         barcode: @ticket.barcode,
         issued_at: @ticket.issued_at,
@@ -47,11 +42,6 @@ module Api
     end
 
     def update
-      if @ticket.nil?
-        render json: { error: "Ticket not found." }, status: :not_found
-        return
-      end
-
       unless params[:status] == "returned"
         render_error("Invalid status. Only 'returned' is allowed.", :unprocessable_content)
         return

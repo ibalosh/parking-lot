@@ -1,5 +1,5 @@
 class Price < ApplicationRecord
-  has_one :ticket
+  has_many :tickets
   belongs_to :parking_lot_facility
   belongs_to :currency
 

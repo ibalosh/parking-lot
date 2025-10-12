@@ -56,8 +56,8 @@ RSpec.describe "api/tickets", type: :request do
         post '/api/tickets'
 
         json = JSON.parse(response.body)
-        expect(response).to have_http_status(:service_unavailable)
-        expect(json['errors'][0]).to eq('No price configured for parking lot')
+        expect(response).to have_http_status(:not_found)
+        expect(json['errors'][0]).to eq('Price not found.')
       end
     end
   end

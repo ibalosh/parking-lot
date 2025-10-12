@@ -4,12 +4,7 @@ module Api
     before_action :find_ticket, only: [ :show, :state, :update ]
 
     def create
-      price = @parking_lot.prices.last
-      if price.nil?
-        render_error("No price configured for parking lot", :service_unavailable)
-        return
-      end
-
+      price = @parking_lot.prices.last!
       ticket = @parking_lot.create_ticket_with_lock(price: price)
 
       if ticket.nil?

@@ -7,16 +7,12 @@ module Api
       price = @parking_lot.prices.last!
       ticket = @parking_lot.create_ticket_with_lock(price: price)
 
-      if ticket.nil?
-        render_error("Parking lot is full", :service_unavailable)
-      elsif ticket.persisted?
-        render json: {
-          barcode: ticket.barcode,
-          issued_at: ticket.issued_at
-        }, status: :created
-      else
-        render json: { errors: ticket.errors.full_messages }, status: :unprocessable_content
-      end
+      render json: {
+        barcode: ticket.barcode,
+        issued_at: ticket.issued_at
+      }, status: :created
+    rescue ParkingLotFacility::ParkingLotFullError => e
+      render_error(e.message, :service_unavailable)
     rescue Ticket::BarcodeGenerationError => e
       render_error(e.message, :internal_server_error)
     end

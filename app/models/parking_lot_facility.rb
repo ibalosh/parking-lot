@@ -5,6 +5,8 @@ class ParkingLotFacility < ApplicationRecord
   validates :name, presence: true, length: { maximum: 255 }
   validates :spaces_count, numericality: { only_integer: true, greater_than_or_equal_to: 0 }
 
+  class ParkingLotFullError < StandardError; end
+
   def available_spaces
     spaces_count - tickets.active.count
   end
@@ -17,7 +19,7 @@ class ParkingLotFacility < ApplicationRecord
     transaction do
       lock!
 
-      return nil if full?
+      raise ParkingLotFullError, "Parking lot is full" if full?
 
       tickets.create!(price_at_entry: price)
     end

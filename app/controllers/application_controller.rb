@@ -22,6 +22,5 @@ class ApplicationController < ActionController::API
   # If we switch to search by ID, we will switch status too.
   def find_parking_lot
     @parking_lot ||= ParkingLotFacility.first!
-    @parking_lot
   end
 end

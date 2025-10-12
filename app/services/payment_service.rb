@@ -40,6 +40,6 @@ class PaymentService
       end
     end
 
-    [payment, is_new]
+    [ payment, is_new ]
   end
 end

@@ -1,5 +1,7 @@
 # Parking Lot Management System
 
+[![CI](https://github.com/ibalosh/parking-lot/actions/workflows/ci.yml/badge.svg)](https://github.com/ibalosh/parking-lot/actions/workflows/ci.yml)
+
 A RESTful API for managing a parking lot with X amount of spaces.
 
 ## Requirements

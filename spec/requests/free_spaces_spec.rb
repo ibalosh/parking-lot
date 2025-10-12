@@ -70,10 +70,10 @@ RSpec.describe "/api/free-spaces", type: :request do
     it 'returns service unavailable error' do
       get '/api/free-spaces'
 
-      expect(response).to have_http_status(:service_unavailable)
+      expect(response).to have_http_status(:not_found)
 
       json = JSON.parse(response.body)
-      expect(json['error']).to eq('No parking lot facility available')
+      expect(json['errors'][0]).to eq("Couldn't find ParkingLotFacility")
     end
   end
 end

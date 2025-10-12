@@ -1,21 +1,16 @@
 module Api
   class TicketsController < ApplicationController
-    before_action :find_facility
+    before_action :find_parking_lot, only: [ :create ]
     before_action :find_ticket, only: [ :show, :state, :update ]
 
     def create
-      if @facility.nil?
-        render json: { error: "No parking lot facility available" }, status: :service_unavailable
-        return
-      end
-
-      price = @facility.prices.last
+      price = @parking_lot.prices.last
       if price.nil?
         render json: { error: "No price configured for parking lot" }, status: :service_unavailable
         return
       end
 
-      ticket = @facility.create_ticket_with_lock(price: price)
+      ticket = @parking_lot.create_ticket_with_lock(price: price)
 
       if ticket.nil?
         render json: { error: "Parking lot is full" }, status: :service_unavailable
@@ -83,14 +78,6 @@ module Api
     def find_ticket
       barcode = params[:id]
       @ticket = Ticket.find_by(barcode: barcode)
-    end
-
-    def find_facility
-      # To keep things simple, we will always use the same first parking lot.
-      # This allows us though to easily expand to multiple.
-      #
-      # We can easily switch this later to be based on id of the parking lot in API
-      @facility = ParkingLotFacility.first
     end
   end
 end

@@ -1,10 +1,9 @@
 module Api
   class PaymentsController < ApplicationController
-    def create
-      # params[:ticket_id] contains the barcode from the URL
-      ticket = Ticket.find_by(barcode: params[:ticket_id])
+    before_action :find_ticket
 
-      if ticket.nil?
+    def create
+      if @ticket.nil?
         render json: { error: "Ticket not found" }, status: :not_found
         return
       end
@@ -12,12 +11,12 @@ module Api
       # Use pessimistic locking to prevent race conditions on concurrent payment attempts
       Ticket.transaction do
         # Lock the ticket row to prevent concurrent payment creation
-        ticket.lock!
+        @ticket.lock!
 
-        if ticket.is_paid(at_time: Time.current)
-          payment = ticket.latest_payment
+        if @ticket.is_paid(at_time: Time.current)
+          payment = @ticket.latest_payment
           render json: {
-            barcode: ticket.barcode,
+            barcode: @ticket.barcode,
             amount: "#{payment.amount} #{payment.currency.symbol}",
             payment_method: payment.payment_method,
             paid_at: payment.paid_at
@@ -25,8 +24,8 @@ module Api
           return
         end
 
-        amount = ticket.price_to_pay_at_this_moment
-        payment = ticket.payments.build(
+        amount = @ticket.price_to_pay_at_this_moment
+        payment = @ticket.payments.build(
           amount: amount,
           payment_method: payment_params[:payment_method],
           paid_at: Time.current
@@ -34,7 +33,7 @@ module Api
 
         if payment.save
           render json: {
-            barcode: ticket.barcode,
+            barcode: @ticket.barcode,
             amount: "#{payment.amount} #{payment.currency.symbol}",
             payment_method: payment.payment_method,
             paid_at: payment.paid_at
@@ -47,8 +46,13 @@ module Api
 
     private
 
+    def find_ticket
+      barcode = params[:ticket_id]
+      @ticket = Ticket.find_by(barcode: barcode)
+    end
+
     def payment_params
-      params.require(:payment).permit(:payment_method)
+      params.require(:payment).permit(:payment_method, :ticket_id)
     end
   end
 end

@@ -83,6 +83,32 @@ class Ticket < ApplicationRecord
     is_paid(at_time:) ? "paid" : "unpaid"
   end
 
+  # Create or return existing payment with pessimistic locking
+  # Returns [payment, is_new] tuple
+  def create_payment_with_lock(payment_method:, at_time: Time.current)
+    is_new = false
+
+    payment = Ticket.transaction do
+      lock!
+
+      # Return existing payment if already paid
+      if is_paid(at_time: at_time)
+        latest_payment
+      else
+        # Create new payment
+        is_new = true
+        amount = price_to_pay(at_time: at_time)
+        payments.create!(
+          amount: amount,
+          payment_method: payment_method,
+          paid_at: at_time
+        )
+      end
+    end
+
+    [ payment, is_new ]
+  end
+
   private
 
   def set_issued_at

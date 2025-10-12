@@ -3,40 +3,13 @@ module Api
     before_action :find_ticket
 
     def create
-      # Use pessimistic locking to prevent race conditions on concurrent payment attempts
-      Ticket.transaction do
-        # Lock the ticket row to prevent concurrent payment creation
-        @ticket.lock!
+      payment, is_new = @ticket.create_payment_with_lock(
+        payment_method: payment_params[:payment_method],
+        at_time: Time.current
+      )
 
-        if @ticket.is_paid(at_time: Time.current)
-          payment = @ticket.latest_payment
-          render json: {
-            barcode: @ticket.barcode,
-            amount: "#{payment.amount} #{payment.currency.symbol}",
-            payment_method: payment.payment_method,
-            paid_at: payment.paid_at
-          }, status: :ok
-          return
-        end
-
-        amount = @ticket.price_to_pay_at_this_moment
-        payment = @ticket.payments.build(
-          amount: amount,
-          payment_method: payment_params[:payment_method],
-          paid_at: Time.current
-        )
-
-        if payment.save
-          render json: {
-            barcode: @ticket.barcode,
-            amount: "#{payment.amount} #{payment.currency.symbol}",
-            payment_method: payment.payment_method,
-            paid_at: payment.paid_at
-          }, status: :created
-        else
-          render json: { errors: payment.errors.full_messages }, status: :unprocessable_content
-        end
-      end
+      status = is_new ? :created : :ok
+      render json: payment_json(payment), status: status
     end
 
     private
@@ -48,6 +21,15 @@ module Api
 
     def payment_params
       params.require(:payment).permit(:payment_method, :ticket_id)
+    end
+
+    def payment_json(payment)
+      {
+        barcode: @ticket.barcode,
+        amount: "#{payment.amount} #{payment.currency.symbol}",
+        payment_method: payment.payment_method,
+        paid_at: payment.paid_at
+      }
     end
   end
 end

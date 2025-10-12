@@ -3,7 +3,8 @@ module Api
     before_action :find_ticket
 
     def create
-      payment, is_new = @ticket.create_payment_with_lock(
+      service = PaymentService.new(@ticket)
+      payment, is_new = service.create_payment(
         payment_method: payment_params[:payment_method],
         at_time: Time.current
       )

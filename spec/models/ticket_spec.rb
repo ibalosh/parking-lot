@@ -112,82 +112,62 @@ RSpec.describe Ticket, type: :model do
   describe '#can_be_returned?' do
     let(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
-    context 'when ticket is paid and within 15 minutes' do
-      it 'returns true' do
-        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 10.minutes.ago)
-        expect(ticket.can_be_returned?).to be true
-      end
+    it 'returns true when ticket is paid and within 15 minutes' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 10.minutes.ago)
+      expect(ticket.can_be_returned?).to be true
     end
 
-    context 'when ticket is not paid' do
-      it 'returns false' do
-        expect(ticket.can_be_returned?).to be false
-      end
+    it 'returns false when ticket is not paid' do
+      expect(ticket.can_be_returned?).to be false
     end
 
-    context 'when ticket is paid but over 15 minutes ago' do
-      it 'returns false' do
-        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 16.minutes.ago)
-        expect(ticket.can_be_returned?).to be false
-      end
+    it 'returns false when ticket is paid but over 15 minutes ago' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 16.minutes.ago)
+      expect(ticket.can_be_returned?).to be false
     end
   end
 
   describe '#mark_as_returned!' do
     let(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
-    context 'when ticket can be returned' do
-      before do
-        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
-      end
+    it 'updates status to returned when ticket is paid' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
 
-      it 'updates status to returned' do
-        expect {
-          ticket.mark_as_returned!
-        }.to change { ticket.status }.from('active').to('returned')
-      end
-
-      it 'sets returned_at timestamp' do
+      expect {
         ticket.mark_as_returned!
-        expect(ticket.returned_at).to be_within(1.second).of(Time.current)
-      end
-
-      it 'returns true' do
-        expect(ticket.mark_as_returned!).to be true
-      end
+      }.to change { ticket.status }.from('active').to('returned')
     end
 
-    context 'when ticket cannot be returned (not paid)' do
-      it 'does not update status' do
-        expect { ticket.mark_as_returned! }.not_to change { ticket.status }
-      end
+    it 'sets returned_at timestamp when ticket is paid' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+      ticket.mark_as_returned!
 
-      it 'does not set returned_at' do
-        ticket.mark_as_returned!
-        expect(ticket.returned_at).to be_nil
-      end
-
-      it 'returns false' do
-        expect(ticket.mark_as_returned!).to be false
-      end
+      expect(ticket.returned_at).to be_within(1.second).of(Time.current)
     end
 
-    context 'when ticket is already returned' do
-      before do
-        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
-        ticket.mark_as_returned!
-      end
+    it 'returns true when ticket can be returned' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+      expect(ticket.mark_as_returned!).to be true
+    end
 
-      it 'returns true without error' do
-        expect(ticket.mark_as_returned!).to be true
-      end
+    it 'does not update status when ticket is not paid' do
+      expect { ticket.mark_as_returned! }.not_to change { ticket.status }
+    end
 
-      it 'does not change returned_at timestamp' do
-        original_time = ticket.returned_at
-        sleep 0.1
-        ticket.mark_as_returned!
-        expect(ticket.returned_at).to eq(original_time)
-      end
+    it 'does not set returned_at when ticket is not paid' do
+      ticket.mark_as_returned!
+      expect(ticket.returned_at).to be_nil
+    end
+
+    it 'returns false when ticket cannot be returned' do
+      expect(ticket.mark_as_returned!).to be false
+    end
+
+    it 'returns true when ticket is already returned (idempotent)' do
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+      ticket.mark_as_returned!
+
+      expect(ticket.mark_as_returned!).to be true
     end
   end
 end

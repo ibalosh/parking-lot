@@ -1,4 +1,4 @@
-# Parking Lot Management System
+# 🅿️ Parking Lot Management System
 
 [![CI](https://github.com/ibalosh/parking-lot/actions/workflows/ci.yml/badge.svg)](https://github.com/ibalosh/parking-lot/actions/workflows/ci.yml)
 

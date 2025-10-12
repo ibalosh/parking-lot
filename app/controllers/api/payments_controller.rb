@@ -17,7 +17,7 @@ module Api
         if ticket.is_paid(at_time: Time.current)
           existing_payment = ticket.latest_payment
           render json: {
-            ticket_barcode: ticket.barcode,
+            barcode: ticket.barcode,
             amount: existing_payment.amount,
             payment_method: existing_payment.payment_method,
             paid_at: existing_payment.paid_at
@@ -34,7 +34,7 @@ module Api
 
         if payment.save
           render json: {
-            ticket_barcode: ticket.barcode,
+            barcode: ticket.barcode,
             amount: payment.amount,
             payment_method: payment.payment_method,
             paid_at: payment.paid_at

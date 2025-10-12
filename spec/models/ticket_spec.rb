@@ -74,4 +74,120 @@ RSpec.describe Ticket, type: :model do
       expect(ticket.price_to_pay_formatted(at_time:)).to eq("2.0 €")
     end
   end
+
+  describe 'status field' do
+    it 'defaults to active when ticket is created' do
+      ticket = create(:ticket, parking_lot_facility: facility, price_at_entry: price)
+      expect(ticket.status).to eq('active')
+    end
+
+    it 'validates status is either active or returned' do
+      ticket = build(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'invalid')
+      expect(ticket).not_to be_valid
+      expect(ticket.errors[:status]).to be_present
+    end
+
+    it 'allows active status' do
+      ticket = build(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+      expect(ticket).to be_valid
+    end
+
+    it 'allows returned status' do
+      ticket = build(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
+      expect(ticket).to be_valid
+    end
+  end
+
+  describe '.active scope' do
+    it 'returns only active tickets' do
+      active_ticket1 = create(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+      active_ticket2 = create(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+      returned_ticket = create(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
+
+      expect(Ticket.active).to include(active_ticket1, active_ticket2)
+      expect(Ticket.active).not_to include(returned_ticket)
+    end
+  end
+
+  describe '#can_be_returned?' do
+    let(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+    context 'when ticket is paid and within 15 minutes' do
+      it 'returns true' do
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 10.minutes.ago)
+        expect(ticket.can_be_returned?).to be true
+      end
+    end
+
+    context 'when ticket is not paid' do
+      it 'returns false' do
+        expect(ticket.can_be_returned?).to be false
+      end
+    end
+
+    context 'when ticket is paid but over 15 minutes ago' do
+      it 'returns false' do
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 16.minutes.ago)
+        expect(ticket.can_be_returned?).to be false
+      end
+    end
+  end
+
+  describe '#mark_as_returned!' do
+    let(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+    context 'when ticket can be returned' do
+      before do
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+      end
+
+      it 'updates status to returned' do
+        expect {
+          ticket.mark_as_returned!
+        }.to change { ticket.status }.from('active').to('returned')
+      end
+
+      it 'sets returned_at timestamp' do
+        ticket.mark_as_returned!
+        expect(ticket.returned_at).to be_within(1.second).of(Time.current)
+      end
+
+      it 'returns true' do
+        expect(ticket.mark_as_returned!).to be true
+      end
+    end
+
+    context 'when ticket cannot be returned (not paid)' do
+      it 'does not update status' do
+        expect { ticket.mark_as_returned! }.not_to change { ticket.status }
+      end
+
+      it 'does not set returned_at' do
+        ticket.mark_as_returned!
+        expect(ticket.returned_at).to be_nil
+      end
+
+      it 'returns false' do
+        expect(ticket.mark_as_returned!).to be false
+      end
+    end
+
+    context 'when ticket is already returned' do
+      before do
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+        ticket.mark_as_returned!
+      end
+
+      it 'returns true without error' do
+        expect(ticket.mark_as_returned!).to be true
+      end
+
+      it 'does not change returned_at timestamp' do
+        original_time = ticket.returned_at
+        sleep 0.1
+        ticket.mark_as_returned!
+        expect(ticket.returned_at).to eq(original_time)
+      end
+    end
+  end
 end

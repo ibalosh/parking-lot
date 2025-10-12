@@ -1,11 +1,16 @@
 module Api
   class TicketsController < ApplicationController
     before_action :find_facility
-    before_action :find_ticket, only: [ :show, :state ]
+    before_action :find_ticket, only: [ :show, :state, :update ]
 
     def create
       if @facility.nil?
         render json: { error: "No parking lot facility available" }, status: :service_unavailable
+        return
+      end
+
+      if @facility.full?
+        render json: { error: "Parking lot is full" }, status: :service_unavailable
         return
       end
 
@@ -52,6 +57,28 @@ module Api
         barcode: @ticket.barcode,
         state: @ticket.is_paid_formatted(at_time: Time.current)
       }, status: :ok
+    end
+
+    def update
+      if @ticket.nil?
+        render json: { error: "Ticket not found" }, status: :not_found
+        return
+      end
+
+      unless params[:status] == "returned"
+        render json: { error: "Invalid status. Only 'returned' is allowed." }, status: :unprocessable_content
+        return
+      end
+
+      if @ticket.mark_as_returned!
+        render json: {
+          barcode: @ticket.barcode,
+          status: @ticket.status,
+          returned_at: @ticket.returned_at
+        }, status: :ok
+      else
+        render json: { error: "Ticket cannot be returned. Must be paid first." }, status: :unprocessable_content
+      end
     end
 
     private

@@ -10,7 +10,7 @@
 #
 # It's strongly recommended that you check this file into your version control system.
 
-ActiveRecord::Schema[8.0].define(version: 2025_10_11_153731) do
+ActiveRecord::Schema[8.0].define(version: 2025_10_12_073224) do
   create_table "currencies", force: :cascade do |t|
     t.string "code", null: false
     t.string "name", null: false
@@ -55,6 +55,8 @@ ActiveRecord::Schema[8.0].define(version: 2025_10_11_153731) do
     t.datetime "created_at", null: false
     t.datetime "updated_at", null: false
     t.integer "price_id", null: false
+    t.string "status", default: "active", null: false
+    t.datetime "returned_at"
     t.index ["barcode"], name: "index_tickets_on_barcode", unique: true
     t.index ["parking_lot_facility_id"], name: "index_tickets_on_parking_lot_facility_id"
     t.index ["price_id"], name: "index_tickets_on_price_id"

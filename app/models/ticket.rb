@@ -1,6 +1,4 @@
 class Ticket < ApplicationRecord
-  class BarcodeGenerationError < StandardError; end
-
   belongs_to :parking_lot_facility
   belongs_to :price_at_entry, class_name: "Price", foreign_key: "price_id"
   has_many :payments
@@ -14,10 +12,27 @@ class Ticket < ApplicationRecord
             length: { is: 16 },
             format: { with: /\A[0-9A-Fa-f]{16}\z/, message: "must be a 16-character hex string" }
   validates :issued_at, presence: true
+  validates :status, presence: true, inclusion: { in: %w[active returned] }
+
+  scope :active, -> { where(status: "active") }
 
   delegate :currency, to: :price_at_entry
 
+  class BarcodeGenerationError < StandardError; end
+
   MAX_BARCODE_GENERATION_ATTEMPTS = 5
+
+  def can_be_returned?(at_time: Time.current)
+    is_paid(at_time: at_time)
+  end
+
+  def mark_as_returned!(at_time: Time.current)
+    return false unless can_be_returned?(at_time: at_time)
+    return true if status === "returned"
+
+    update!(status: "returned", returned_at: at_time)
+    true
+  end
 
   def price_to_pay_at_this_moment
     price_to_pay(at_time: Time.current)

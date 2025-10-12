@@ -295,4 +295,189 @@ RSpec.describe "Api::Tickets", type: :request do
       end
     end
   end
+
+  describe "POST /api/tickets when parking lot is full" do
+    let!(:currency) { create(:currency) }
+    let!(:facility) { create(:parking_lot_facility, spaces_count: 54) }
+    let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+
+    context 'when parking lot has exactly 54 active tickets' do
+      before do
+        create_list(:ticket, 54, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+      end
+
+      it 'returns service unavailable error' do
+        post '/api/tickets'
+
+        expect(response).to have_http_status(:service_unavailable)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Parking lot is full')
+      end
+
+      it 'does not create a new ticket' do
+        expect { post '/api/tickets' }.not_to change(Ticket, :count)
+      end
+    end
+
+    context 'when parking lot has 53 active tickets (1 space left)' do
+      before do
+        create_list(:ticket, 53, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+      end
+
+      it 'allows creating a ticket' do
+        expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
+        expect(response).to have_http_status(:created)
+      end
+    end
+
+    context 'when parking lot has returned tickets' do
+      before do
+        create_list(:ticket, 54, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
+      end
+
+      it 'allows creating new tickets (returned tickets free up space)' do
+        expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
+        expect(response).to have_http_status(:created)
+      end
+    end
+
+    context 'when parking lot has mix of active and returned tickets' do
+      before do
+        create_list(:ticket, 50, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+        create_list(:ticket, 10, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
+      end
+
+      it 'allows creating tickets up to limit' do
+        # Should be able to create 4 more tickets (54 - 50 = 4)
+        expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
+        expect(response).to have_http_status(:created)
+      end
+    end
+  end
+
+  describe "PUT /api/tickets/:barcode" do
+    let!(:currency) { create(:currency) }
+    let!(:facility) { create(:parking_lot_facility, spaces_count: 54) }
+    let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+
+    context 'when ticket exists and is paid' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+      before do
+        ticket.update_column(:issued_at, 2.hours.ago)
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+      end
+
+      it 'marks ticket as returned' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+
+        expect(response).to have_http_status(:ok)
+
+        json = JSON.parse(response.body)
+        expect(json['barcode']).to eq(ticket.barcode)
+        expect(json['status']).to eq('returned')
+        expect(json['returned_at']).to be_present
+      end
+
+      it 'updates the ticket status in database' do
+        expect {
+          put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+        }.to change { ticket.reload.status }.from('active').to('returned')
+      end
+
+      it 'sets returned_at timestamp' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+
+        ticket.reload
+        expect(ticket.returned_at).to be_within(1.second).of(Time.current)
+      end
+    end
+
+    context 'when ticket is not paid' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+      it 'returns unprocessable error' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+
+        expect(response).to have_http_status(:unprocessable_content)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Ticket cannot be returned. Must be paid first.')
+      end
+
+      it 'does not update ticket status' do
+        expect {
+          put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+        }.not_to change { ticket.reload.status }
+      end
+    end
+
+    context 'when ticket payment is expired (over 15 minutes)' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+      before do
+        ticket.update_column(:issued_at, 2.hours.ago)
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 20.minutes.ago)
+      end
+
+      it 'returns unprocessable error' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+
+        expect(response).to have_http_status(:unprocessable_content)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Ticket cannot be returned. Must be paid first.')
+      end
+    end
+
+    context 'when ticket is already returned' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'returned') }
+
+      before do
+        ticket.update_column(:issued_at, 2.hours.ago)
+        ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+        ticket.update_column(:returned_at, 2.minutes.ago)
+      end
+
+      it 'returns success (idempotent)' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+
+        expect(response).to have_http_status(:ok)
+      end
+    end
+
+    context 'when status parameter is invalid' do
+      let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
+
+      it 'returns unprocessable error for invalid status' do
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'active' }
+
+        expect(response).to have_http_status(:unprocessable_content)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq("Invalid status. Only 'returned' is allowed.")
+      end
+    end
+
+    context 'when ticket does not exist' do
+      it 'returns not found error' do
+        put "/api/tickets/invalidbarcode123", params: { status: 'returned' }
+
+        expect(response).to have_http_status(:not_found)
+
+        json = JSON.parse(response.body)
+        expect(json['error']).to eq('Ticket not found')
+      end
+    end
+
+    it 'returns JSON format' do
+      ticket = create(:ticket, parking_lot_facility: facility, price_at_entry: price)
+      ticket.update_column(:issued_at, 2.hours.ago)
+      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
+
+      put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
+      expect(response.content_type).to match(%r{application/json})
+    end
+  end
 end

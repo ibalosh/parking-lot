@@ -81,7 +81,7 @@ RSpec.describe "GET /api/tickets/{barcode}/state", type: :request do
       expect(response).to have_http_status(:not_found)
 
       json = JSON.parse(response.body)
-      expect(json['error']).to eq('Ticket not found')
+      expect(json['errors'][0]).to eq("Ticket not found.")
     end
   end
 end

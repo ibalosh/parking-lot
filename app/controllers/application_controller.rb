@@ -4,7 +4,9 @@ class ApplicationController < ActionController::API
   private
 
   def handle_not_found(exception)
-    render_error(exception.message, :not_found)
+    model_name = exception.model || "Record"
+    message = "#{model_name} not found."
+    render_error(message, :not_found)
   end
 
   def render_error(messages, status)

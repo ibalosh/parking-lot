@@ -48,7 +48,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq('Ticket cannot be returned. Must be paid first.')
+        expect(json['errors'][0]).to eq('Ticket cannot be returned. Must be paid first.')
       end
 
       it 'does not update ticket status' do
@@ -72,7 +72,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq('Ticket cannot be returned. Must be paid first.')
+        expect(json['errors'][0]).to eq('Ticket cannot be returned. Must be paid first.')
       end
     end
 
@@ -101,7 +101,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:unprocessable_content)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq("Invalid status. Only 'returned' is allowed.")
+        expect(json['errors'][0]).to eq("Invalid status. Only 'returned' is allowed.")
       end
     end
 
@@ -112,7 +112,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:not_found)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq('Ticket not found')
+        expect(json['errors'][0]).to eq('Ticket not found.')
       end
     end
 
@@ -187,7 +187,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:not_found)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq('Ticket not found')
+        expect(json['errors'][0]).to eq("Ticket not found.")
       end
     end
   end

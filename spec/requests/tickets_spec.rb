@@ -41,7 +41,7 @@ RSpec.describe "api/tickets", type: :request do
 
         json = JSON.parse(response.body)
         expect(response).to have_http_status(:not_found)
-        expect(json['errors'][0]).to eq("Couldn't find ParkingLotFacility")
+        expect(json['errors'][0]).to eq("ParkingLotFacility not found.")
       end
 
       it 'does not create a ticket' do
@@ -57,7 +57,7 @@ RSpec.describe "api/tickets", type: :request do
 
         json = JSON.parse(response.body)
         expect(response).to have_http_status(:service_unavailable)
-        expect(json['error']).to eq('No price configured for parking lot')
+        expect(json['errors'][0]).to eq('No price configured for parking lot')
       end
     end
   end
@@ -78,7 +78,7 @@ RSpec.describe "api/tickets", type: :request do
         expect(response).to have_http_status(:service_unavailable)
 
         json = JSON.parse(response.body)
-        expect(json['error']).to eq('Parking lot is full')
+        expect(json['errors'][0]).to eq('Parking lot is full')
       end
 
       it 'does not create a new ticket' do

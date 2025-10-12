@@ -73,7 +73,7 @@ RSpec.describe "/api/free-spaces", type: :request do
       expect(response).to have_http_status(:not_found)
 
       json = JSON.parse(response.body)
-      expect(json['errors'][0]).to eq("Couldn't find ParkingLotFacility")
+      expect(json['errors'][0]).to eq("ParkingLotFacility not found.")
     end
   end
 end

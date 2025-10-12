@@ -3,11 +3,6 @@ module Api
     before_action :find_ticket
 
     def create
-      if @ticket.nil?
-        render json: { error: "Ticket not found" }, status: :not_found
-        return
-      end
-
       # Use pessimistic locking to prevent race conditions on concurrent payment attempts
       Ticket.transaction do
         # Lock the ticket row to prevent concurrent payment creation
@@ -48,7 +43,7 @@ module Api
 
     def find_ticket
       barcode = params[:ticket_id]
-      @ticket = Ticket.find_by(barcode: barcode)
+      @ticket = Ticket.find_by!(barcode: barcode)
     end
 
     def payment_params

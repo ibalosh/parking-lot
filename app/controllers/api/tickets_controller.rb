@@ -9,20 +9,17 @@ module Api
         return
       end
 
-      if @facility.full?
-        render json: { error: "Parking lot is full" }, status: :service_unavailable
-        return
-      end
-
       price = @facility.prices.last
       if price.nil?
         render json: { error: "No price configured for parking lot" }, status: :service_unavailable
         return
       end
 
-      ticket = @facility.tickets.build(price_at_entry: price)
+      ticket = @facility.create_ticket_with_lock(price: price)
 
-      if ticket.save
+      if ticket.nil?
+        render json: { error: "Parking lot is full" }, status: :service_unavailable
+      elsif ticket.persisted?
         render json: {
           barcode: ticket.barcode,
           issued_at: ticket.issued_at

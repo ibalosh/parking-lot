@@ -12,4 +12,14 @@ class ParkingLotFacility < ApplicationRecord
   def full?
     available_spaces <= 0
   end
+
+  def create_ticket_with_lock(price:)
+    transaction do
+      lock!
+
+      return nil if full?
+
+      tickets.create!(price_at_entry: price)
+    end
+  end
 end

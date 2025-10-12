@@ -15,12 +15,12 @@ module Api
         ticket.lock!
 
         if ticket.is_paid(at_time: Time.current)
-          existing_payment = ticket.latest_payment
+          payment = ticket.latest_payment
           render json: {
             barcode: ticket.barcode,
-            amount: existing_payment.amount,
-            payment_method: existing_payment.payment_method,
-            paid_at: existing_payment.paid_at
+            amount: "#{payment.amount} #{payment.currency.symbol}",
+            payment_method: payment.payment_method,
+            paid_at: payment.paid_at
           }, status: :ok
           return
         end
@@ -35,7 +35,7 @@ module Api
         if payment.save
           render json: {
             barcode: ticket.barcode,
-            amount: payment.amount,
+            amount: "#{payment.amount} #{payment.currency.symbol}",
             payment_method: payment.payment_method,
             paid_at: payment.paid_at
           }, status: :created

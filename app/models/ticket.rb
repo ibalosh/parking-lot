@@ -15,6 +15,8 @@ class Ticket < ApplicationRecord
             format: { with: /\A[0-9A-Fa-f]{16}\z/, message: "must be a 16-character hex string" }
   validates :issued_at, presence: true
 
+  delegate :currency, to: :price_at_entry
+
   MAX_BARCODE_GENERATION_ATTEMPTS = 5
 
   def price_to_pay_at_this_moment
@@ -35,7 +37,7 @@ class Ticket < ApplicationRecord
   end
 
   def price_to_pay_formatted(at_time:)
-    "#{price_to_pay(at_time: at_time)} #{price_at_entry.currency.symbol}"
+    "#{price_to_pay(at_time: at_time)} #{currency.symbol}"
   end
 
   # Get the most recent payment

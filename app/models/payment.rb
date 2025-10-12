@@ -6,4 +6,6 @@ class Payment < ApplicationRecord
   validates :amount, presence: true, numericality: { greater_than: 0 }
   validates :payment_method, presence: true, inclusion: { in: VALID_PAYMENT_METHODS }
   validates :paid_at, presence: true
+
+  delegate :currency, to: :ticket
 end

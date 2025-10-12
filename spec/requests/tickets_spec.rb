@@ -149,7 +149,7 @@ RSpec.describe "Api::Tickets", type: :request do
 
         json = JSON.parse(response.body)
         expect(json['barcode']).to eq(ticket.barcode)
-        expect(json['amount']).to eq("6.0") # 3 hours * €2
+        expect(json['amount']).to eq("6.0 €") # 3 hours * €2
         expect(json['payment_method']).to eq('credit_card')
         expect(json['paid_at']).to be_present
       end

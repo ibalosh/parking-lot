@@ -30,9 +30,10 @@ rails server
 bundle exec rspec
 ```
 
-## API Documentation
+## Documentation
 
 - **[API Endpoints](docs/API_ENDPOINTS.md)** - Detailed endpoint documentation with request/response examples
+- **[Database Schema](docs/DATABASE.md)** - Entity relationship diagram and table descriptions
 - **[Postman Collection](docs/Parking-Lot.postman_collection.json)** - Import this collection to test the API in Postman
 
 ## Architecture

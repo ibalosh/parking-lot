@@ -71,7 +71,19 @@ bundle exec rspec
 
 4. **Barcode as Identifier** - Tickets identified by barcode instead of database ID for better UX at physical machines.
 
-5. **Payment Expiration** - 15-minute window ensures customers don't pay and then park for hours before leaving.
+5. **Separate ID and Barcode Fields** - The tickets table uses both an auto-incrementing `id` (primary key) and a
+   `barcode` field (unique indexed string). While the barcode could technically serve as the primary key, keeping a
+   separate integer ID provides several benefits:
+   - **Performance**: Integer primary keys are more efficient for joins and foreign key relationships (e.g., payments
+     linking to tickets)
+   - **Flexibility**: If barcode format needs to change (e.g., from numeric to alphanumeric), it won't affect foreign
+     key relationships
+   - **Convention**: Follows Rails and ActiveRecord conventions, making the codebase more maintainable
+
+   The barcode serves as a natural key for API consumers and physical interactions, while the ID serves as a technical
+   key for internal database relationships.
+
+6. **Payment Expiration** - 15-minute window ensures customers don't pay and then park for hours before leaving.
 
 ## Design Notes & Assumptions
 

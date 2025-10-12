@@ -42,23 +42,23 @@ module Api
     end
 
     def update
-      unless params[:status] == "returned"
-        render_error("Invalid status. Only 'returned' is allowed.", :unprocessable_content)
-        return
-      end
+      @ticket.change_status!(params_status)
 
-      if @ticket.mark_as_returned!
-        render json: {
-          barcode: @ticket.barcode,
-          status: @ticket.status,
-          returned_at: @ticket.returned_at
-        }, status: :ok
-      else
-        render_error("Ticket cannot be returned. Must be paid first.", :unprocessable_content)
-      end
+      render json: {
+        barcode: @ticket.barcode,
+        status: @ticket.status,
+        returned_at: @ticket.returned_at
+      }, status: :ok
+
+    rescue Ticket::StatusChangeError => e
+      render_error(e.message, :unprocessable_content)
     end
 
     private
+
+    def params_status
+      params[:status]
+    end
 
     def find_ticket
       barcode = params[:id]

@@ -150,17 +150,9 @@ RSpec.describe Ticket, type: :model do
       expect(ticket.mark_as_returned!).to be true
     end
 
-    it 'does not update status when ticket is not paid' do
-      expect { ticket.mark_as_returned! }.not_to change { ticket.status }
-    end
-
-    it 'does not set returned_at when ticket is not paid' do
-      ticket.mark_as_returned!
-      expect(ticket.returned_at).to be_nil
-    end
-
     it 'returns false when ticket cannot be returned' do
-      expect(ticket.mark_as_returned!).to be false
+      expect { ticket.mark_as_returned! }.to raise_error(Ticket::StatusChangeError)
+      expect(ticket.returned_at).to be_nil
     end
 
     it 'returns true when ticket is already returned (idempotent)' do

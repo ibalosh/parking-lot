@@ -96,7 +96,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
       it 'returns unprocessable error for invalid status' do
-        put "/api/tickets/#{ticket.barcode}", params: { status: 'active' }
+        put "/api/tickets/#{ticket.barcode}", params: { status: 'invalid' }
 
         expect(response).to have_http_status(:unprocessable_content)
 

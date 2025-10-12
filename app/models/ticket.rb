@@ -6,13 +6,15 @@ class Ticket < ApplicationRecord
   before_validation :generate_barcode, on: :create
   before_validation :set_issued_at, on: :create
 
+  VALID_STATUSES = %w[active returned]
+
   validates :barcode,
             presence: true,
             uniqueness: true,
             length: { is: 16 },
             format: { with: /\A[0-9A-Fa-f]{16}\z/, message: "must be a 16-character hex string" }
   validates :issued_at, presence: true
-  validates :status, presence: true, inclusion: { in: %w[active returned] }
+  validates :status, presence: true, inclusion: { in: VALID_STATUSES }
 
   scope :active, -> { where(status: "active") }
 
@@ -20,14 +22,22 @@ class Ticket < ApplicationRecord
 
   class BarcodeGenerationError < StandardError; end
 
+  class StatusChangeError < StandardError; end
+
   MAX_BARCODE_GENERATION_ATTEMPTS = 5
 
   def can_be_returned?(at_time: Time.current)
     is_paid(at_time: at_time)
   end
 
+  def change_status!(status)
+    raise StatusChangeError, "Invalid status. Only 'returned' is allowed." unless VALID_STATUSES.include?(status)
+
+    mark_as_returned!(at_time: Time.current) if status === "returned"
+  end
+
   def mark_as_returned!(at_time: Time.current)
-    return false unless can_be_returned?(at_time: at_time)
+    raise StatusChangeError, "Ticket cannot be returned. Must be paid first." unless can_be_returned?(at_time: at_time)
     return true if status === "returned"
 
     update!(status: "returned", returned_at: at_time)

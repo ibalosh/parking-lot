@@ -87,35 +87,28 @@ RSpec.describe "api/tickets", type: :request do
     end
 
     context 'when parking lot has 53 active tickets (1 space left)' do
-      before do
-        create_list(:ticket, 53, parking_lot_facility: facility, price_at_entry: price, status: 'active')
-      end
-
       it 'allows creating a ticket' do
+        create_list(:ticket, 53, parking_lot_facility: facility, price_at_entry: price, status: 'active')
+
         expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
         expect(response).to have_http_status(:created)
       end
     end
 
     context 'when parking lot has returned tickets' do
-      before do
-        create_list(:ticket, 54, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
-      end
-
       it 'allows creating new tickets (returned tickets free up space)' do
+        create_list(:ticket, 54, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
         expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
+
         expect(response).to have_http_status(:created)
       end
     end
 
     context 'when parking lot has mix of active and returned tickets' do
-      before do
+      it 'allows creating tickets up to limit' do
         create_list(:ticket, 50, parking_lot_facility: facility, price_at_entry: price, status: 'active')
         create_list(:ticket, 10, parking_lot_facility: facility, price_at_entry: price, status: 'returned')
-      end
 
-      it 'allows creating tickets up to limit' do
-        # Should be able to create 4 more tickets (54 - 50 = 4)
         expect { post '/api/tickets' }.to change(Ticket, :count).by(1)
         expect(response).to have_http_status(:created)
       end

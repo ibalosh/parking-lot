@@ -46,11 +46,6 @@ bundle exec rspec
 - **Price** - Configurable pricing (€2/hour)
 - **Currency** - Multi-currency support
 
-### Service Layer
-
-- **PaymentService** - Handles payment creation with pessimistic locking to prevent race conditions where concurrent
-  requests could create duplicate payments
-
 ### Key Features
 
 - **Race condition protection**: Pessimistic locking prevents duplicate payments and overbooking
@@ -64,7 +59,7 @@ bundle exec rspec
 1. **Pessimistic Locking** - Used in `PaymentService` and `create_ticket_with_lock` to prevent race conditions in
    high-concurrency scenarios (duplicate payments, overbooking).
 
-2. **Service Layer** - `PaymentService` extracts complex payment logic from the controller, making it easier to test and
+2. **Service Layer** - `PaymentService` extracts payment logic from the controller, making it easier to test and
    maintain.
 
 3. **Active Tickets Scope** - Only active tickets count toward capacity; returned tickets free up spaces immediately.
@@ -90,13 +85,13 @@ bundle exec rspec
 ### Database & Multi-tenancy
 
 - **Single Parking Lot**: Currently, the API uses the first parking lot facility from the database. This can be easily
-  extended to support multiple parking lots by accepting a facility ID parameter in requests.
+  extended to support multiple parking lots by accepting a facility ID
 - **Database Choice**: SQLite for simplicity and ease of setup. Production deployments should use PostgreSQL or MySQL.
 
 ### Pricing & Currency
 
 - **Multi-currency Support**: The system supports multiple currencies (Currency model), but each parking lot uses a
-  single currency defined in its Price configuration.
+  single currency defined in its Price configuration. Easily extendable this way
 - **Price History**: Tickets capture the price configuration at the time of entry (`price_at_entry`), ensuring
   historical accuracy even if pricing changes later.
 - **Hourly Pricing**: Every started hour is billed as a full hour. For example, parking for 1 hour and 1 second costs
@@ -123,6 +118,6 @@ bundle exec rspec
 
 ### API Design
 
-- **Versioning**: All endpoints are namespaced under `/api` to allow for future versioning (`/api/v2`, etc.).
+- **Versioning**: All endpoints are namespaced under `/api` to allow for future versioning (`/api/v2`, etc.) possibility.
 - **Error Handling**: Consistent error responses with appropriate HTTP status codes (404 for not found, 422 for
   validation errors, 503 for parking lot full).

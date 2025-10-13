@@ -1,6 +1,6 @@
 # API Endpoints
 
-## 1. Create Ticket (Task #1)
+## 1. Create Ticket 
 
 **POST** `/api/tickets`
 
@@ -15,7 +15,7 @@ Creates a new parking ticket with a unique 16-character hex barcode. Returns err
 }
 ```
 
-## 2. Get Ticket Price (Task #2)
+## 2. Get Ticket Price 
 
 **GET** `/api/tickets/{barcode}`
 
@@ -31,7 +31,7 @@ Calculates the parking fee based on time parked. Every started hour costs €2. 
 }
 ```
 
-## 3. Create Payment (Task #3)
+## 3. Create Payment
 
 **POST** `/api/tickets/{barcode}/payments`
 
@@ -58,7 +58,7 @@ Records a payment for a ticket. Payment methods: `credit_card`, `debit_card`, `c
 }
 ```
 
-## 4. Check Ticket State (Task #4)
+## 4. Check Ticket State 
 
 **GET** `/api/tickets/{barcode}/state`
 
@@ -73,7 +73,7 @@ Returns whether a ticket is paid or unpaid. Payment is valid for 15 minutes.
 }
 ```
 
-## 5. Get Free Spaces (Task #5)
+## 5. Get Free Spaces 
 
 **GET** `/api/free-spaces`
 
@@ -88,7 +88,7 @@ Returns the number of available parking spaces.
 }
 ```
 
-## 6. Return Ticket
+## 6. Update ticket (return ticket - status for now)
 
 **PUT** `/api/tickets/{barcode}`
 

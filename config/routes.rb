@@ -15,4 +15,7 @@ Rails.application.routes.draw do
 
   # Defines the root path route ("/")
   # root "posts#index"
+
+  # Catch-all route for invalid URLs
+  match "*path", to: "api/errors#not_found", via: :all
 end

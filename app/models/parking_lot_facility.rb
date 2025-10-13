@@ -16,7 +16,7 @@ class ParkingLotFacility < ApplicationRecord
   end
 
   # Creates a ticket with pessimistic locking to prevent overbooking.
-  # 
+  #
   # Locks the facility record before checking availability to ensure only one
   # request can check and create a ticket at a time.
   def create_ticket_with_lock(price:)

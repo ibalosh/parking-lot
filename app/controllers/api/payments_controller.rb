@@ -4,10 +4,7 @@ module Api
 
     def create
       service = PaymentService.new(@ticket)
-      payment, is_new = service.create_payment(
-        payment_method: payment_params[:payment_method],
-        at_time: Time.current
-      )
+      payment, is_new = service.create_payment(payment_method: payment_params[:payment_method].to_s)
 
       status = is_new ? :created : :ok
       render json: payment_json(payment), status: status

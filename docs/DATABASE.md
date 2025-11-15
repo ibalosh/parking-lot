@@ -12,10 +12,10 @@ erDiagram
 
     PARKING_LOT_FACILITIES {
         integer id PK
-        string name
+        string name "NOT NULL"
         integer spaces_count "NOT NULL, >= 0"
-        datetime created_at
-        datetime updated_at
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     CURRENCIES {
@@ -23,8 +23,8 @@ erDiagram
         string code "NOT NULL, UNIQUE"
         string name "NOT NULL"
         string symbol "NOT NULL"
-        datetime created_at
-        datetime updated_at
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     PRICES {
@@ -32,8 +32,8 @@ erDiagram
         integer parking_lot_facility_id FK "NOT NULL"
         integer currency_id FK "NOT NULL"
         decimal price_per_hour "NOT NULL"
-        datetime created_at
-        datetime updated_at
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     TICKETS {
@@ -43,9 +43,9 @@ erDiagram
         integer price_id FK "NOT NULL"
         string status "NOT NULL, DEFAULT 'active'"
         datetime issued_at "NOT NULL"
-        datetime returned_at
-        datetime created_at
-        datetime updated_at
+        datetime returned_at 
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 
     PAYMENTS {
@@ -54,8 +54,8 @@ erDiagram
         decimal amount "NOT NULL"
         string payment_method "NOT NULL"
         datetime paid_at "NOT NULL"
-        datetime created_at
-        datetime updated_at
+        datetime created_at "NOT NULL"
+        datetime updated_at "NOT NULL"
     }
 ```
 

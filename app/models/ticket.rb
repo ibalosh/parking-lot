@@ -55,7 +55,9 @@ class Ticket < ApplicationRecord
     return 0 if issued_at.nil?
     return 0 if is_paid(at_time: at_time)
 
-    duration_in_seconds = at_time - issued_at
+    # we want to make sure we do not double-charge, so you pay either for the ticket
+    # or for the difference between what you already paid and what you owe
+    duration_in_seconds = at_time - (latest_payment&.paid_at || issued_at)
     hours_parked = (duration_in_seconds / 3600.0).ceil # Every started hour
 
     hours_parked * price_at_entry.price_per_hour

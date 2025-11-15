@@ -28,7 +28,8 @@ module Api
     def state
       render json: {
         barcode: @ticket.barcode,
-        state: @ticket.is_paid_formatted(at_time: Time.current)
+        state: @ticket.is_paid_formatted(at_time: Time.current),
+        last_payment_at: @ticket.latest_payment&.paid_at
       }, status: :ok
     end
 

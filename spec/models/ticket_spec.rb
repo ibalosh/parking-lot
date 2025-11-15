@@ -62,6 +62,53 @@ RSpec.describe Ticket, type: :model do
       at_time = entry_time + 5.hours
       expect(ticket.price_to_pay(at_time:)).to eq(10.0)
     end
+
+    context 'when ticket has a previous payment that expired' do
+      it 'calculates price from last payment time, not from ticket issue time' do
+        # Ticket issued at 10:00
+        # First payment at 11:00 (paid for 1 hour = €2)
+        first_payment_time = entry_time + 1.hour
+        ticket.payments.create!(
+          amount: 2.0,
+          payment_method: 'credit_card',
+          paid_at: first_payment_time
+        )
+
+        # User tries to leave at 11:25 (25 minutes after payment)
+        # Payment expired after 15 minutes, so they need to pay again
+        leave_time = first_payment_time + 25.minutes
+
+        # Should charge for time since last payment (25 min = 1 hour), NOT from issue time (1h 25min = 2 hours)
+        # Without the fix: would charge €4 (double payment for first hour)
+        # With the fix: charges €2 (only the additional time)
+        expect(ticket.price_to_pay(at_time: leave_time)).to eq(2.0)
+      end
+
+      it 'calculates price correctly for multiple expired payments' do
+        # Ticket issued at 10:00
+        # First payment at 11:00 for 1 hour
+        first_payment_time = entry_time + 1.hour
+        ticket.payments.create!(
+          amount: 2.0,
+          payment_method: 'credit_card',
+          paid_at: first_payment_time
+        )
+
+        # Second payment at 13:00 (2 hours after first payment) for 2 hours
+        second_payment_time = first_payment_time + 2.hours
+        ticket.payments.create!(
+          amount: 4.0,
+          payment_method: 'credit_card',
+          paid_at: second_payment_time
+        )
+
+        # User tries to leave at 14:30 (1.5 hours after second payment)
+        leave_time = second_payment_time + 1.5.hours
+
+        # Should charge for time since last payment (1.5 hours = 2 hours rounded up)
+        expect(ticket.price_to_pay(at_time: leave_time)).to eq(4.0)
+      end
+    end
   end
 
   describe '#price_to_pay_formatted' do

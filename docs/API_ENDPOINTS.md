@@ -69,7 +69,8 @@ Returns whether a ticket is paid or unpaid. Payment is valid for 15 minutes.
 ```json
 {
   "barcode": "a1b2c3d4e5f67890",
-  "state": "paid"
+  "state": "paid",
+  "last_payment_at": "2025-01-12T12:00:00Z"
 }
 ```
 

@@ -5,7 +5,7 @@ module Api
 
     def create
       price = @parking_lot.prices.last!
-      ticket = @parking_lot.create_ticket_with_lock(price: price)
+      ticket = @parking_lot.create_ticket!(price: price)
 
       render json: {
         barcode: ticket.barcode,

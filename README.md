@@ -57,7 +57,7 @@ bundle exec rspec
 
 ## Design Decisions
 
-1. **Pessimistic Locking** - Used in `PaymentService` and `create_ticket_with_lock` to prevent race conditions in
+1. **Pessimistic Locking** - Used in `TicketPaymentService` and `create_ticket!` to prevent race conditions in
    high-concurrency scenarios (duplicate payments, overbooking).
 
 2. **Service Layer** - `PaymentService` extracts payment logic from the controller, making it easier to test and

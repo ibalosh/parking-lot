@@ -19,7 +19,7 @@ class ParkingLotFacility < ApplicationRecord
   #
   # Locks the facility record before checking availability to ensure only one
   # request can check and create a ticket at a time.
-  def create_ticket_with_lock(price:)
+  def create_ticket!(price:)
     transaction do
       lock!
 

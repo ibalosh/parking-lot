@@ -3,7 +3,7 @@ module Api
     before_action :find_ticket
 
     def create
-      service = PaymentService.new(@ticket)
+      service = TicketPaymentService.new(@ticket)
       payment, is_new = service.create_payment(payment_method: payment_params[:payment_method].to_s)
 
       status = is_new ? :created : :ok

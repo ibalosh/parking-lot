@@ -1,4 +1,4 @@
-class PaymentService
+class TicketPaymentService
   attr_reader :ticket
 
   def initialize(ticket)

@@ -18,7 +18,8 @@ bundle install
 bin/rails db:setup
 ```
 
-Once the setup is complete, you can start the Rails server:
+Once the setup is complete, it will see the test data too. 
+You can start the Rails server:
 
 ```
 rails server
@@ -40,7 +41,7 @@ bundle exec rspec
 
 ### Models
 
-- **ParkingLotFacility** - Manages parking lot capacity (54 spaces)
+- **ParkingLotFacility** - Manages parking lot capacity (for this specific case - 54 spaces)
 - **Ticket** - Parking tickets with barcode, status (active/returned), and timestamps
 - **Payment** - Payment records linked to tickets
 - **Price** - Configurable pricing (€2/hour)
@@ -49,7 +50,7 @@ bundle exec rspec
 ### Key Features
 
 - **Race condition protection**: Pessimistic locking prevents duplicate payments and overbooking
-- **Data integrity**: Comprehensive validations and unique constraints
+- **Data integrity**: validations and unique constraints
 - **Idempotent operations**: Multiple payment attempts return existing payment
 - **15-minute grace period**: Payment valid for 15 minutes after purchase
 - **Dynamic pricing**: Calculated per started hour based on entry time
@@ -64,7 +65,7 @@ bundle exec rspec
 
 3. **Active Tickets Scope** - Only active tickets count toward capacity; returned tickets free up spaces immediately.
 
-4. **Barcode as Identifier** - Tickets identified by barcode instead of database ID for better UX at physical machines.
+4. **Barcode as Identifier** - Tickets identified by barcode instead of database ID for better UX 
 
 5. **Separate ID and Barcode Fields** - The tickets table uses both an auto-incrementing `id` (primary key) and a
    `barcode` field (unique indexed string). While the barcode could technically serve as the primary key, keeping a

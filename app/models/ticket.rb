@@ -93,9 +93,19 @@ class Ticket < ApplicationRecord
     self.barcode ||= generate_unique_barcode
   end
 
-  # Add safety due to possible collision
-  # If all {MAX_BARCODE_GENERATION_ATTEMPTS} attempts fail which is
-  # extremely unlikely with 16 hex chars = 2^64 possibilities, raises an error
+  # Generates a 16-hex-digit (64-bit) random barcode with retry-on-collision.
+  # A 16-digit hex value provides 2^64 (~1.8e19) possible combinations.
+  #
+  # Even after generating millions of barcodes, the probability of a collision
+  # (birthday paradox ≈ k² / (2 * 2^64)) remains low.
+  #
+  # The retry loop exists only as a safety net: hitting MAX_BARCODE_GENERATION_ATTEMPTS
+  # would require an extremely unlikely sequence of collisions.
+  #
+  # k = 30*24*365 = 262,800 * 10 = 2,628,000 (30 tickets on average per hour, every day a year for 10 years)
+  # N = 18,446,744,073,709,551,616 (2x64)
+  # collision probability ≈ k² / (2N) ≈ 0.0000187%
+  #
   def generate_unique_barcode
     MAX_BARCODE_GENERATION_ATTEMPTS.times do
       candidate = SecureRandom.hex(8)

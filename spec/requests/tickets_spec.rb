@@ -30,16 +30,12 @@ RSpec.describe "api/tickets", type: :request do
     end
 
     context 'when no parking lot facility exists' do
-      it 'returns service unavailable with error message' do
-        post '/api/tickets'
+      it 'returns not found error and does not create a ticket' do
+        expect { post '/api/tickets' }.not_to change(Ticket, :count)
 
         json = JSON.parse(response.body)
         expect(response).to have_http_status(:not_found)
         expect(json['errors'][0]).to eq("ParkingLotFacility not found.")
-      end
-
-      it 'does not create a ticket' do
-        expect { post '/api/tickets' }.not_to change(Ticket, :count)
       end
     end
 
@@ -66,17 +62,13 @@ RSpec.describe "api/tickets", type: :request do
         create_list(:ticket, 54, parking_lot_facility: facility, price_at_entry: price, status: 'active')
       end
 
-      it 'returns service unavailable error' do
-        post '/api/tickets'
+      it 'returns service unavailable error and does not create a new ticket' do
+        expect { post '/api/tickets' }.not_to change(Ticket, :count)
 
         expect(response).to have_http_status(:service_unavailable)
 
         json = JSON.parse(response.body)
         expect(json['errors'][0]).to eq('Parking lot is full')
-      end
-
-      it 'does not create a new ticket' do
-        expect { post '/api/tickets' }.not_to change(Ticket, :count)
       end
     end
 

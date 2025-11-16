@@ -8,12 +8,10 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
     context 'when ticket exists and is paid' do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
-      before do
+      it 'marks ticket as returned' do
         ticket.update_column(:issued_at, 2.hours.ago)
         ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
-      end
 
-      it 'marks ticket as returned' do
         put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
 
         expect(response).to have_http_status(:ok)
@@ -23,64 +21,58 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(json['status']).to eq('returned')
         expect(Time.parse(json['returned_at'])).to be_within(1.second).of(Time.current)
       end
-
-      it 'updates the ticket status in database' do
-        expect {
-          put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
-        }.to change { ticket.reload.status }.from('active').to('returned')
-      end
     end
 
     context 'when ticket is not paid' do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
-      it 'returns unprocessable error' do
+      it 'returns unprocessable error and does not update ticket status' do
         put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
 
         expect(response).to have_http_status(:unprocessable_content)
 
         json = JSON.parse(response.body)
         expect(json['errors'][0]).to eq('Ticket cannot be returned. Must be paid first.')
-      end
 
-      it 'does not update ticket status' do
-        expect {
-          put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
-        }.not_to change { ticket.reload.status }
+        get "/api/tickets/#{ticket.barcode}"
+        json = JSON.parse(response.body)
+        expect(json['status']).to eq('active')
       end
     end
 
     context 'when ticket payment is expired (over 15 minutes)' do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }
 
-      before do
+      it 'returns unprocessable error' do
         ticket.update_column(:issued_at, 2.hours.ago)
         ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 20.minutes.ago)
-      end
 
-      it 'returns unprocessable error' do
         put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
 
         expect(response).to have_http_status(:unprocessable_content)
 
         json = JSON.parse(response.body)
         expect(json['errors'][0]).to eq('Ticket cannot be returned. Must be paid first.')
+
+        get "/api/tickets/#{ticket.barcode}"
+        json = JSON.parse(response.body)
+        expect(json['status']).to eq('active')
       end
     end
 
     context 'when ticket is already returned' do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price, status: 'returned') }
 
-      before do
+      it 'returns success (idempotent)' do
         ticket.update_column(:issued_at, 2.hours.ago)
         ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
         ticket.update_column(:returned_at, 2.minutes.ago)
-      end
 
-      it 'returns success (idempotent)' do
         put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
 
+        json = JSON.parse(response.body)
         expect(response).to have_http_status(:ok)
+        expect(json['status']).to eq('returned')
       end
     end
 
@@ -156,6 +148,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
 
         json = JSON.parse(response.body)
         expect(json['price']).to eq("0 €")
+        expect(json['status']).to eq("active")
       end
     end
 

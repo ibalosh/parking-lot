@@ -4,8 +4,7 @@ module Api
     before_action :find_ticket, only: [ :show, :state, :update ]
 
     def create
-      price = @parking_lot.prices.last!
-      ticket = @parking_lot.create_ticket!(price: price)
+      ticket = @parking_lot.create_ticket!
 
       render json: {
         barcode: ticket.barcode,

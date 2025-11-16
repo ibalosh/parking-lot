@@ -19,12 +19,13 @@ class ParkingLotFacility < ApplicationRecord
   #
   # Locks the facility record before checking availability to ensure only one
   # request can check and create a ticket at a time.
-  def create_ticket!(price:)
+  def create_ticket!
     transaction do
       lock!
 
       raise ParkingLotFullError, "Parking lot is full" if full?
 
+      price = prices.last!
       tickets.create!(price_at_entry: price)
     end
   end

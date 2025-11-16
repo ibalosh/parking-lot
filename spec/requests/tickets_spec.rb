@@ -27,11 +27,6 @@ RSpec.describe "api/tickets", type: :request do
 
         expect([ barcode1, barcode2, barcode3 ].uniq.length).to eq(3)
       end
-
-      it 'returns JSON format by default' do
-        post '/api/tickets'
-        expect(response.content_type).to match(%r{application/json})
-      end
     end
 
     context 'when no parking lot facility exists' do

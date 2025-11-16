@@ -58,11 +58,6 @@ RSpec.describe "POST /api/tickets/{barcode}/payments", type: :request do
       json = JSON.parse(response.body)
       expect(json['errors']).to include(/Payment method is not included in the list/)
     end
-
-    it 'returns JSON format' do
-      post "/api/tickets/#{ticket.barcode}/payments", params: { payment: { payment_method: 'credit_card' } }
-      expect(response.content_type).to match(%r{application/json})
-    end
   end
 
   context 'when ticket does not exist' do

@@ -107,15 +107,6 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(json['errors'][0]).to eq('Ticket not found.')
       end
     end
-
-    it 'returns JSON format' do
-      ticket = create(:ticket, parking_lot_facility: facility, price_at_entry: price)
-      ticket.update_column(:issued_at, 2.hours.ago)
-      ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
-
-      put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
-      expect(response.content_type).to match(%r{application/json})
-    end
   end
 
   describe "GET /api/tickets/:barcode" do

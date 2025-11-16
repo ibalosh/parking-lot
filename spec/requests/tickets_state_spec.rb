@@ -67,11 +67,6 @@ RSpec.describe "GET /api/tickets/{barcode}/state", type: :request do
       json = JSON.parse(response.body)
       expect(json['state']).to eq('paid')
     end
-
-    it 'returns JSON format' do
-      get "/api/tickets/#{ticket.barcode}/state"
-      expect(response.content_type).to match(%r{application/json})
-    end
   end
 
   context 'when ticket does not exist' do

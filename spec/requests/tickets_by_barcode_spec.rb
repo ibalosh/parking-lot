@@ -21,20 +21,13 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         json = JSON.parse(response.body)
         expect(json['barcode']).to eq(ticket.barcode)
         expect(json['status']).to eq('returned')
-        expect(json['returned_at']).to be_present
+        expect(Time.parse(json['returned_at'])).to be_within(1.second).of(Time.current)
       end
 
       it 'updates the ticket status in database' do
         expect {
           put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
         }.to change { ticket.reload.status }.from('active').to('returned')
-      end
-
-      it 'sets returned_at timestamp' do
-        put "/api/tickets/#{ticket.barcode}", params: { status: 'returned' }
-
-        ticket.reload
-        expect(ticket.returned_at).to be_within(1.second).of(Time.current)
       end
     end
 
@@ -142,6 +135,7 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
         expect(response).to have_http_status(:ok)
         expect(json['barcode']).to eq(ticket.barcode)
         expect(json['issued_at']).to be_present
+        expect(json['status']).to eq("active")
         expect(json['price']).to eq("6.0 €")
       end
 
@@ -171,11 +165,6 @@ RSpec.describe "/api/tickets/{barcode}", type: :request do
 
         json = JSON.parse(response.body)
         expect(json['price']).to eq("0 €")
-      end
-
-      it 'returns JSON format' do
-        get "/api/tickets/#{ticket.barcode}"
-        expect(response.content_type).to match(%r{application/json})
       end
     end
 

@@ -27,7 +27,8 @@ Calculates the parking fee based on time parked. Every started hour costs €2. 
 {
   "barcode": "a1b2c3d4e5f67890",
   "issued_at": "2025-01-12T10:00:00Z",
-  "price": "4 €"
+  "price": "4 €",
+  "status": "active"
 }
 ```
 
@@ -70,7 +71,8 @@ Returns whether a ticket is paid or unpaid. Payment is valid for 15 minutes.
 {
   "barcode": "a1b2c3d4e5f67890",
   "state": "paid",
-  "last_payment_at": "2025-01-12T12:00:00Z"
+  "last_payment_at": "2025-01-12T12:00:00Z",
+  "status": "active"
 }
 ```
 

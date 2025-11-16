@@ -21,7 +21,8 @@ module Api
       render json: {
         barcode: @ticket.barcode,
         issued_at: @ticket.issued_at,
-        price: @ticket.price_to_pay_formatted(at_time: Time.current)
+        price: @ticket.price_to_pay_formatted(at_time: Time.current),
+        status: @ticket.status
       }, status: :ok
     end
 
@@ -29,7 +30,8 @@ module Api
       render json: {
         barcode: @ticket.barcode,
         state: @ticket.is_paid_formatted(at_time: Time.current),
-        last_payment_at: @ticket.latest_payment&.paid_at
+        last_payment_at: @ticket.latest_payment&.paid_at,
+        status: @ticket.status
       }, status: :ok
     end
 

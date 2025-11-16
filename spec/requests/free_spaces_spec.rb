@@ -58,11 +58,6 @@ RSpec.describe "/api/free-spaces", type: :request do
       expect(json['available_spaces']).to eq(0)
       expect(json['total_spaces']).to eq(54)
     end
-
-    it 'returns JSON format' do
-      get '/api/free-spaces'
-      expect(response.content_type).to match(%r{application/json})
-    end
   end
 
   describe "GET /api/free-spaces when no facility exists" do

@@ -1,9 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe Ticket, type: :model do
-  let(:currency) { create(:currency) }
   let(:facility) { create(:parking_lot_facility) }
-  let(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+  let(:price) { create(:price, parking_lot_facility: facility, price_per_hour: 2.00) }
 
   describe 'ticket creation' do
     it 'automatically generates a unique 16-character hex barcode' do
@@ -180,9 +179,7 @@ RSpec.describe Ticket, type: :model do
     it 'updates status to returned when ticket is paid' do
       ticket.payments.create!(amount: 4.0, payment_method: 'credit_card', paid_at: 5.minutes.ago)
 
-      expect {
-        ticket.mark_as_returned!
-      }.to change { ticket.status }.from('active').to('returned')
+      expect { ticket.mark_as_returned! }.to change { ticket.status }.from('active').to('returned')
     end
 
     it 'sets returned_at timestamp when ticket is paid' do

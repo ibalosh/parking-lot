@@ -2,9 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "/api/tickets/{barcode}", type: :request do
   describe "PUT /api/tickets/:barcode" do
-    let!(:currency) { create(:currency) }
     let!(:facility) { create(:parking_lot_facility, spaces_count: 54) }
-    let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+    let!(:price) { create(:price, parking_lot_facility: facility, price_per_hour: 2.00) }
 
     context 'when ticket exists and is paid' do
       let!(:ticket) { create(:ticket, parking_lot_facility: facility, price_at_entry: price) }

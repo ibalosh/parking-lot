@@ -1,9 +1,8 @@
 require 'rails_helper'
 
 RSpec.describe ParkingLotFacility, type: :model do
-  let(:currency) { create(:currency) }
   let(:facility) { create(:parking_lot_facility, spaces_count: 54) }
-  let(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+  let(:price) { create(:price, parking_lot_facility: facility, price_per_hour: 2.00) }
 
   describe '#available_spaces' do
     it 'returns total spaces count when no tickets exist' do

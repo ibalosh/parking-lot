@@ -3,9 +3,8 @@ require 'rails_helper'
 RSpec.describe "api/tickets", type: :request do
   describe "POST /api/tickets" do
     context 'when parking lot facility exists with price' do
-      let!(:currency) { create(:currency) }
       let!(:facility) { create(:parking_lot_facility, spaces_count: 54) }
-      let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+      let!(:price) { create(:price, parking_lot_facility: facility, price_per_hour: 2.00) }
 
       it 'creates a new ticket with barcode and issued_at timestamp' do
         expect { post '/api/tickets' }.to change(Ticket, :count).by(1)

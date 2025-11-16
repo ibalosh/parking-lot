@@ -2,9 +2,8 @@ require 'rails_helper'
 
 RSpec.describe "/api/free-spaces", type: :request do
   describe "GET /api/free-spaces" do
-    let!(:currency) { create(:currency) }
     let!(:facility) { create(:parking_lot_facility, spaces_count: 54) }
-    let!(:price) { create(:price, parking_lot_facility: facility, currency: currency, price_per_hour: 2.00) }
+    let!(:price) { create(:price, parking_lot_facility: facility, price_per_hour: 2.00) }
 
     it 'returns all spaces as available when no tickets exist' do
       get '/api/free-spaces'

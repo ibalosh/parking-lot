@@ -22,9 +22,7 @@ class TicketPaymentService
   def create_payment(payment_method:, at_time: Time.current)
     is_new = false
 
-    payment = Ticket.transaction do
-      ticket.lock!
-
+    payment = ticket.with_lock do
       # Return existing payment if already paid
       if ticket.is_paid(at_time: at_time)
         ticket.latest_payment
